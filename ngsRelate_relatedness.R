@@ -1,4 +1,4 @@
-setwd("~/Dropbox/yap_hetcheck_2020/") # change this to where your scp'd files are
+setwd("~/Dropbox/yap_hetcheck_2020/Yap_siblings") # change this to where your scp'd files are
 library(pheatmap)
 
 # reading long relatedness table, output of ngsRelate
@@ -19,15 +19,12 @@ for (a in unique(c(rel$a))) {
 diag(relm)=1
 dim(relm)
 
-relm[sibs,sibs]
-
-# adding names to columns and rows - assuming ngsRelate was run on angsd result obtained for bams.nr file
-bams=scan("goodbams.sub100k",what="character") # list of bam files
-bams=sub(".sub100k.bam","",bams)
+# adding names to columns and rows - assuming ngsRelate was run on angsd result obtained for bams2 file
+bams=scan("bams2",what="character") # list of bam files
+bams=sub(".bam","",bams)
 dimnames(relm)=list(bams,bams)
-bams[grep("NMP_147",bams)]
 
-# reading sfs
+# reading pairwise sfs (from ngsRelate ourput)
 sfs=list();i=1;sfsnames=c()
 for (a in unique(c(rel$a))) {
   for (b in unique(rel$b)) {
@@ -41,7 +38,7 @@ for (a in unique(c(rel$a))) {
 }
 
 
-# reading inbreedings
+# reading inbreeding (from ngsRelate ourput)
 inb=c()
 for (a in unique(c(rel$a))) {
     inb=append(inb,mean(as.numeric(rel[rel$a==a,"Fa"])))
@@ -49,8 +46,13 @@ for (a in unique(c(rel$a))) {
 inb=append(inb,mean(as.numeric(rel[rel$b=="261","Fa"])))
 names(inb)=bams
 
-source("~/Dropbox/sfs2matrix.R")
+
+# plotting AFS between sibs and between random samples
+
+source("sfs2matrix.R")
 plotSFS=function(pairname){
+  require(RColorBrewer)
+  require(pheatmap)
   s1d=sfs[[which(sfsnames==pairname)]]
   ss=log(sfs2matrix(s1d,1,1)+1e-2,10)
   dimnames(ss)=list(rev(c("AA","Aa","aa")),c("AA","Aa","aa"))
@@ -58,12 +60,10 @@ plotSFS=function(pairname){
   pp=pheatmap(ss,cluster_rows = F, cluster_cols = F,border_color = F,color=col,angle_col=0)
   plot(pp)
 }
-10^(-1.5)
-10^(-0.5)
 
-pdf("NMP_139J_NMP_143J_sfs.pdf",height=1.5,width=2)
-plotSFS("NMP_139J_NMP_143J")
-dev.off()
+# pdf("NMP_139J_NMP_143J_sfs.pdf",height=1.5,width=2)
+# plotSFS("NMP_139J_NMP_143J")
+# dev.off()
 
 pdf("NMP_147J_NMP_154J_sfs.pdf",height=1.5,width=2)
 plotSFS("NMP_147J_NMP_154J")
@@ -73,13 +73,8 @@ pdf("randomPair_sfs.pdf",height=1.5,width=2)
 plotSFS(sample(sfsnames,1))
 dev.off()
 
-# plotting the matrix
-library(pheatmap)
-pheatmap(relm,cex=0.5)
-
-
-# removing pair of sibs to do capscale
-sibs2go=which(bams %in% c("NMP_154J","NMP_143J"))
+# removing one of the sibs to do capscale
+sibs2go=which(bams == "NMP_154J")
 relm.nosibs=relm[-sibs2go,-sibs2go]
 reld=as.dist(1-relm.nosibs)
 library(vegan)
@@ -90,7 +85,7 @@ pred=predict(rcap,relm,type='sp',scaling="sites")
 rscor=data.frame(scores(pred,scaling=1)[,1:2])
 
 rscor$inbreed=inb
-sibnames=c("NMP_147J","NMP_154J","NMP_139J","NMP_143J")
+sibnames=c("NMP_147J","NMP_154J")
 
 i2p=data.frame(row.names(rscor),sub("_\\d+","_",row.names(rscor)))
 i2p[,2]=sub("_H.+","_A",i2p[,2])
@@ -103,7 +98,7 @@ nmpj[grep("NMP_\\d+J",row.names(rscor))]="NMP Juv"
 # tracking sibs
 sibs1=sibs2=rep(FALSE,nrow(rscor))
 sibs1[which(row.names(rscor) %in% c("NMP_147J","NMP_154J"))]=TRUE
-sibs2[which(row.names(rscor) %in% c("NMP_139J","NMP_143J"))]=TRUE
+#sibs2[which(row.names(rscor) %in% c("NMP_139J","NMP_143J"))]=TRUE
 rscor$nmp=nmpj
 
 rscor$pcinbreed=read.table("pcangsd.min.inbreed.samples")[,1]
@@ -126,8 +121,8 @@ pdf("pcoa_relatedness_admixture.pdf",height=4,width=4)
 ggplot()+geom_point(rscor,mapping=aes(MDS1,MDS2,color=nmpj,size=admix),pch=1)+
   scale_size_continuous(range=c(0.5,5),trans="exp")+
   theme_bw()+coord_equal()+
-  geom_point(rscor[sibs1,],mapping=aes(MDS1,MDS2),pch=3,color="black")+
-  geom_point(rscor[sibs2,],mapping=aes(MDS1,MDS2),pch=4,color="black")
+  geom_point(rscor[sibs1,],mapping=aes(MDS1,MDS2),pch=3,color="black")
+#  geom_point(rscor[sibs2,],mapping=aes(MDS1,MDS2),pch=4,color="black")
 dev.off()
 
 #correlation with admixture (perfect one)
@@ -186,8 +181,8 @@ dev.off()
 ggplot()+geom_point(rscor,mapping=aes(MDS1,MDS2,color=nmpj,size=lns),pch=1)+
   #  scale_size_continuous(range=c(0.5,5),trans="exp")+
   theme_bw()+coord_equal()+
-  geom_point(rscor[sibs1,],mapping=aes(MDS1,MDS2),pch=3,color="black")+
-  geom_point(rscor[sibs2,],mapping=aes(MDS1,MDS2),pch=4,color="black")
+  geom_point(rscor[sibs1,],mapping=aes(MDS1,MDS2),pch=3,color="black")
+#  geom_point(rscor[sibs2,],mapping=aes(MDS1,MDS2),pch=4,color="black")
 
 plot(MDS1~lns,rscor)
 plot(admix~lns,rscor)
@@ -249,8 +244,8 @@ pdf("pcoa_IBS_ellipse_sibs.pdf",height=3,width=3.5)
 ggplot()+geom_point(ibsscor,mapping=aes(MDS1,MDS2,color=pop_age),pch=1)+
   #  scale_size_continuous(range=c(0.5,5),trans="exp")+
   theme_void()+coord_equal()+stat_ellipse(ibsscor,mapping=aes(MDS1,MDS2,color=pop_age),type="norm")+
-  geom_point(ibsscor[sibs1,],mapping=aes(MDS1,MDS2),pch=3,size=5,color="grey20")+
-  geom_point(ibsscor[sibs2,],mapping=aes(MDS1,MDS2),pch=4,size=5,color="grey20")
+  geom_point(ibsscor[sibs1,],mapping=aes(MDS1,MDS2),pch=3,size=5,color="grey20")
+#  geom_point(ibsscor[sibs2,],mapping=aes(MDS1,MDS2),pch=4,size=5,color="grey20")
 dev.off()
 
 ibsscor[sibs,]

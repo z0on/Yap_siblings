@@ -1,0 +1,13 @@
+PCAngsd v.1.10
+Time: 26/09/2022 09:57:46
+Directory: /scratch/01211/cmonstr/reyap
+Options:
+	-beagle g2.beagle.gz
+	-threads 12
+	-out pcangsd.min
+	-minMaf 0.025
+	-selection
+	-inbreedSamples
+	-admix
+	-maf_save
+	-sites_save

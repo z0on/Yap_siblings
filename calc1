@@ -1,0 +1,1 @@
+export NIND=`cat bams.local | wc -l`; export MI=`echo "($NIND*$MinIndPerc+0.5)/1" | bc`

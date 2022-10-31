@@ -1,0 +1,1 @@
+source calc1 && /home1/01211/cmonstr/angsd/angsd -b bams.local -r chr1:1-2000000 -GL 1 -uniqueOnly 1 -remove_bads 1 -minMapQ 20 -minInd $MI -doQsDist 1 -doDepth 1 -doCounts 1 -dumpCounts 2 -P 12 -out dd && Rscript ~/bin/plotQC.R prefix=dd

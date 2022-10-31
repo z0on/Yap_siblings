@@ -1,10 +1,11 @@
 # repace directory location below with the name of the cloned github repo directory
-setwd("~/Dropbox/yap_hetcheck_2020")
+setwd("~/Dropbox/yap_hetcheck_2020/Yap_siblings")
 
 library(vegan)
 library(tidyverse)
 
 load('sst_modified.RData')
+str(sst)
 
 files=paste(scan("modnames",what="c"),".RData",sep="")
 # meta=do.call(rbind,strsplit(files,"[_.]"))[,3:4]
@@ -135,10 +136,24 @@ for (a in toplot) {
 }
 names(sds)=ids
 sdss=stack(sds)
+head(sds)
+
+plot(SRS1000~norm,sds,mgp=c(2.3,1,0),main="SD of coral cover",type="l",col="coral",ylab="SRS SD",xlab="base model SD")
+abline(0,1,lty=3)
+lines(SRS100~norm,sds,col="green4")
+lines(SRS10~norm,sds,col="cyan2")
+legend("topleft",lty=1,col=c("cyan2","green4","coral"),c("0.1","0.01","0.001"),cex=0.9,bty="n",y.intersp=1.2)
+
 sdss$reef=order(datt$sd)[11:670]
-names(sdss)=c("cover_sd","model","reef")
-sdss$reef=factor(sdss$reef)
+names(sdss)=c("cover_sd","model","reef_id")
+sdss$reef=factor(sdss$reef_id)
 sdss$model=factor(sdss$model)
+sst=merge(sst,sdss,by="reef_id")
+str(sst)
+
+sddif=subset(sst,model=="SRS100"$
+
+
 #ggplot(sdss,aes(model,sd,color=reef))+geom_line()+geom_point()+theme_bw()
 pdf(file="violins_sd.pdf",width=1.7,height=2)
 gg=ggplot(sdss,aes(model,cover_sd))+geom_violin(scale="width")+theme(axis.text.x = element_text(angle = 45, hjust=1))

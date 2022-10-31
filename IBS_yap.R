@@ -1,12 +1,11 @@
-setwd("~/Dropbox/yap_hetcheck_2020/") # change this to where your scp'd files are
+setwd("~/Dropbox/yap_hetcheck_2020/Yap_siblings") # change this to where your scp'd files are
 library(pheatmap)
 
 #------ IBS of all bams
 
-allbams=scan("bams.qc",what="c")
-allbams=sub("/work/03121/sbarfie/yap/","",allbams)
-allbams=sub(".trim.bt2.bam","",allbams)
-ibsma=as.matrix(read.table("g3all.ibsMat"))
+allbams=scan("goodbams.nohh",what="c")
+allbams=sub(".bam","",allbams)
+ibsma=as.matrix(read.table("all.nohh.ibsMat"))
 dimnames(ibsma)=list(allbams,allbams)
 hc=hclust(as.dist(ibsma),method="ave")
 pdf("allbams_hclust.pdf",height=4,width=8)
@@ -14,7 +13,7 @@ plot(hc,cex=0.0001)
 dev.off()
 plot(hc,cex=0.5)
 
-# ---- list of bams without clones and wrong collections
+# ---- list of bams without clones, wrong collections, and heterozygosity outliers
 
 bams=scan("goodbams.sub100k",what="c")
 bams=sub(".sub100k.bam","",bams)
@@ -89,6 +88,7 @@ ibsscor$pop=factor(sub("_[AJ]","",ibsscor$pop_age))
 ibsscor$age=factor(sub(".+_","",ibsscor$pop_age))
 
 # heterozygosity
+
 zy=read.table("goodbams.minsites.het")
 names(zy)=c("sample","nsites","hz")
 zy$sample=sub("\\..+","",zy$sample)
@@ -115,7 +115,8 @@ summary(lm(ibsscor$inbreed~nmpj))
 
 #----- heterozygosity/nsites outliers removal
 
-load("IBS_pcoa_admix_pcinbreed_het_nsites_MinSites.RData")
+ll=load("IBS_pcoa_admix_pcinbreed_het_nsites_MinSites.RData")
+dim(ibsscor)
 plot(density(ibsscor$hz))
 plot(density(ibsscor$lns))
 ibsscor$hz_z=abs(scale(ibsscor$hz))
@@ -158,7 +159,7 @@ ggplot()+geom_point(ibsscor,mapping=aes(MDS1,MDS2,color=pop_age),pch=1)+
 dev.off()
 
 # detecting structure
-adonis(ibsscor[,1:2]~pop_age,data=ibsscor,method="euclidean")
+adonis2(rscor[,1:2]~pop_age,data=rscor,method="euclidean")
 # Df SumsOfSqs    MeanSqs F.Model      R2 Pr(>F)   
 # pop_age     7 0.0009001 1.2859e-04   2.085 0.05434  0.006 **
 #   Residuals 254 0.0156647 6.1672e-05         0.94566          
@@ -202,11 +203,11 @@ plotOrdi=function(ordination,groupingFactor,spider=T,ellipse=T,...){
 
 par(mfrow=c(1,1))
 pdf("ordination_pop_age.pdf",height=4.8,width=4)
-plotOrdi(ibsscor[,1:2],ibsscor$pop_age,ellipse=F,cex=0.8)
+plotOrdi(rscor[,1:2],rscor$pop_age,ellipse=F,cex=0.8)
 dev.off()
 
 pdf("ordination_pop.pdf",height=4.8,width=4)
-plotOrdi(predi,ibsscor$pop,ellipse=F,cex=0.8)
+plotOrdi(rscor,rscor$pop,ellipse=F,cex=0.8)
 dev.off()
 
 pdf("ordination_age.pdf",height=4.8,width=4)
